@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Attendance Credit Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4169E1;
+            --primary-hover: #3557c5;
+            --primary-light: #6495ED;
+            --primary-lighter: #87CEEB;
+            --background-gradient: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+            --card-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background-gradient);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--card-gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .card-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .card-subtext {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        
+        .form-field {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="date"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        button {
+            padding: 10px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: var(--primary-hover);
+        }
+        
+        .sessions-list {
+            margin-top: 20px;
+        }
+        
+        .sessions-list h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        #sessionsList {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        #sessionsList::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #sessionsList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #sessionsList::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        #sessionsList::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+        
+        .session-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+        
+        .session-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .session-info {
+            flex: 1;
+        }
+        
+        .session-date {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .session-details {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .no-sessions {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        .month-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .month-selector button {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        
+        .current-month {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Class Attendance Tracker</h1>
+        <p class="subtitle">Track your daily class hours and earn credits toward rent and groceries</p>
+        
+        <div class="month-selector">
+            <button id="prevMonth">&larr; Previous</button>
+            <span class="current-month" id="currentMonth"></span>
+            <button id="nextMonth">Next &rarr;</button>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-label">Total Hours</div>
+                <div class="card-value" id="totalHours">0</div>
+                <div class="card-subtext">this month</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Total Credits</div>
+                <div class="card-value" id="totalCredits">0</div>
+                <div class="card-subtext">hours + 10% bonus</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Credit Value</div>
+                <div class="card-value" id="creditValue">$0.00</div>
+                <div class="card-subtext">@$15 per credit</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Rent Balance</div>
+                <div class="card-value" id="rentBalance">$500.00</div>
+                <div class="card-subtext">remaining</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Groceries Balance</div>
+                <div class="card-value" id="groceryBalance">$200.00</div>
+                <div class="card-subtext">remaining</div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <div class="form-field">
+                    <label for="sessionDate">Date</label>
+                    <input type="date" id="sessionDate">
+                </div>
+                <div class="form-field">
+                    <label for="sessionHours">Hours Attended</label>
+                    <input type="number" id="sessionHours" min="0" step="0.5" placeholder="e.g., 2.5">
+                </div>
+                <button id="addSession">Add Session</button>
+            </div>
+        </div>
+        
+        <div class="sessions-list">
+            <h2>Sessions</h2>
+            <div id="sessionsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration constants
+        var CREDIT_VALUE = 15;
+        var BONUS_PERCENTAGE = 0.1;
+        var RENT_AMOUNT = 500;
+        var GROCERY_AMOUNT = 200;
+        
+        // Helper function to round half-up
+        function roundHalfUp(num, decimals) {
+            var multiplier = Math.pow(10, decimals);
+            return Math.round(num * multiplier + 0.00001) / multiplier;
+        }
+        
+        var sessions = {};
+        var currentMonth = new Date().getMonth();
+        var currentYear = new Date().getFullYear();
+        
+        function loadFromStorage() {
+            var savedSessions = localStorage.getItem('attendanceSessions');
+            
+            if (savedSessions) {
+                sessions = JSON.parse(savedSessions);
+            }
+        }
+        
+        function saveToStorage() {
+            localStorage.setItem('attendanceSessions', JSON.stringify(sessions));
+        }
+        
+        function setTodayDate() {
+            var today = new Date().toISOString().split('T')[0];
+            $('#sessionDate').val(today);
+        }
+        
+        function getMonthKey() {
+            return currentYear + '-' + String(currentMonth + 1).padStart(2, '0');
+        }
+        
+        function updateMonthDisplay() {
+            var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            $('#currentMonth').text(monthNames[currentMonth] + ' ' + currentYear);
+        }
+        
+        function loadSessions() {
+            var monthKey = getMonthKey();
+            if (!sessions[monthKey]) {
+                sessions[monthKey] = [];
+            }
+        }
+        
+        function calculateTotals() {
+            var monthKey = getMonthKey();
+            var monthSessions = sessions[monthKey] || [];
+            
+            var totalHours = 0;
+            for (var i = 0; i < monthSessions.length; i++) {
+                totalHours += monthSessions[i].hours;
+            }
+            
+            var totalCredits = totalHours * (1 + BONUS_PERCENTAGE);
+            var creditValue = totalCredits * CREDIT_VALUE;
+            
+            // Apply credits first to rent, then to groceries
+            var remainingValue = creditValue;
+            var rentBalance = RENT_AMOUNT;
+            var groceryBalance = GROCERY_AMOUNT;
+            
+            if (remainingValue >= rentBalance) {
+                remainingValue -= rentBalance;
+                rentBalance = 0;
+                
+                if (remainingValue >= groceryBalance) {
+                    remainingValue -= groceryBalance;
+                    groceryBalance = 0;
+                    groceryBalance = -remainingValue;
+                } else {
+                    groceryBalance -= remainingValue;
+                    remainingValue = 0;
+                }
+            } else {
+                rentBalance -= remainingValue;
+                remainingValue = 0;
+            }
+            
+            $('#totalHours').text(roundHalfUp(totalHours, 1).toFixed(1));
+            $('#totalCredits').text(roundHalfUp(totalCredits, 1).toFixed(1));
+            $('#creditValue').text('$' + roundHalfUp(creditValue, 2).toFixed(2));
+            $('#rentBalance').text('$' + roundHalfUp(rentBalance, 2).toFixed(2));
+            
+            if (groceryBalance < 0) {
+                $('#groceryBalance').text('$' + roundHalfUp(Math.abs(groceryBalance), 2).toFixed(2) + ' overpaid');
+            } else {
+                $('#groceryBalance').text('$' + roundHalfUp(groceryBalance, 2).toFixed(2));
+            }
+            
+            saveToStorage();
+        }
+        
+        function renderSessions() {
+            var monthKey = getMonthKey();
+            var monthSessions = sessions[monthKey] || [];
+            var $list = $('#sessionsList');
+            
+            if (monthSessions.length === 0) {
+                $list.html('<div class="no-sessions">No sessions recorded for this month</div>');
+                return;
+            }
+            
+            var sortedSessions = monthSessions.sort(function(a, b) {
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            $list.empty();
+            for (var i = 0; i < sortedSessions.length; i++) {
+                var session = sortedSessions[i];
+                var credits = roundHalfUp(session.hours * (1 + BONUS_PERCENTAGE), 1);
+                var value = roundHalfUp(credits * CREDIT_VALUE, 2);
+                
+                var dateObj = new Date(session.date + 'T00:00:00');
+                var dateStr = dateObj.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                var $item = $('<div class="session-item">' +
+                    '<div class="session-info">' +
+                        '<div class="session-date">' + dateStr + '</div>' +
+                        '<div class="session-details">' +
+                            session.hours + ' hours &rarr; ' + credits.toFixed(1) + ' credits &rarr; $' + value.toFixed(2) +
+                        '</div>' +
+                    '</div>' +
+                    '<button class="delete-btn" data-index="' + i + '">Delete</button>' +
+                '</div>');
+                
+                $list.append($item);
+            }
+        }
+        
+        function addSession() {
+            var date = $('#sessionDate').val();
+            var hours = parseFloat($('#sessionHours').val());
+            
+            if (!date || !hours || hours <= 0) {
+                alert('Please enter a valid date and hours');
+                return;
+            }
+            
+            var monthKey = getMonthKey();
+            if (!sessions[monthKey]) {
+                sessions[monthKey] = [];
+            }
+            
+            sessions[monthKey].push({ date: date, hours: hours });
+            $('#sessionHours').val('');
+            
+            saveToStorage();
+            updateDisplay();
+        }
+        
+        function deleteSession(index) {
+            var monthKey = getMonthKey();
+            sessions[monthKey].splice(index, 1);
+            saveToStorage();
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            calculateTotals();
+            renderSessions();
+        }
+        
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateMonthDisplay();
+            loadSessions();
+            updateDisplay();
+        }
+        
+        $(document).ready(function() {
+            $('#addSession').on('click', addSession);
+            
+            $('#sessionHours').on('keypress', function(e) {
+                if (e.which === 13) {
+                    addSession();
+                }
+            });
+            
+            $('#sessionsList').on('click', '.delete-btn', function() {
+                var index = $(this).data('index');
+                deleteSession(index);
+            });
+            
+            $('#prevMonth').on('click', function() {
+                changeMonth(-1);
+            });
+            
+            $('#nextMonth').on('click', function() {
+                changeMonth(1);
+            });
+            
+            loadFromStorage();
+            setTodayDate();
+            updateMonthDisplay();
+            loadSessions();
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
