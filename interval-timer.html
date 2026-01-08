@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .start-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .stop-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .stop-btn:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .timer-display {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-ring {
+            margin: 20px auto;
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+
+        .countdown-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .countdown-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .countdown-ring .bg {
+            stroke: #e0e0e0;
+        }
+
+        .countdown-ring .progress {
+            stroke: #667eea;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ Interval Timer</h1>
+        
+        <div class="input-group">
+            <label for="minutes">Interval (minutes):</label>
+            <input type="number" id="minutes" min="0.1" step="0.1" value="1" placeholder="Enter minutes">
+        </div>
+
+        <div class="button-group">
+            <button class="start-btn" id="startBtn">Start Timer</button>
+            <button class="stop-btn" id="stopBtn" disabled>Stop</button>
+        </div>
+
+        <div id="status" class="status">Ready to start</div>
+
+        <div class="countdown-ring" id="countdownRing" style="display: none;">
+            <svg width="120" height="120">
+                <circle class="bg" cx="60" cy="60" r="54"></circle>
+                <circle class="progress" cx="60" cy="60" r="54" id="progressCircle"></circle>
+            </svg>
+        </div>
+
+        <div id="timerDisplay" class="timer-display" style="display: none;"></div>
+    </div>
+
+    <script>
+        let intervalId = null;
+        let countdownId = null;
+        let audioContext = null;
+        let intervalMinutes = 0;
+        let remainingSeconds = 0;
+
+        const minutesInput = document.getElementById('minutes');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const countdownRing = document.getElementById('countdownRing');
+        const progressCircle = document.getElementById('progressCircle');
+
+        const circumference = 2 * Math.PI * 54;
+        progressCircle.style.strokeDasharray = circumference;
+        progressCircle.style.strokeDashoffset = 0;
+
+        // Load saved interval from localStorage on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedInterval = localStorage.getItem('intervalMinutes');
+            if (savedInterval) {
+                minutesInput.value = savedInterval;
+            }
+        });
+
+        // Save interval to localStorage whenever it changes
+        minutesInput.addEventListener('input', () => {
+            if (minutesInput.value) {
+                localStorage.setItem('intervalMinutes', minutesInput.value);
+            }
+        });
+
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound() {
+            initAudioContext();
+            
+            // F major scale: F4 = 349.23 Hz (tonic)
+            const tonic = 349.23;
+            const third = tonic * Math.pow(2, 4/12); // Major third (E)
+            const fifth = tonic * Math.pow(2, 7/12); // Perfect fifth (G)
+            
+            const notes = [fifth, third, tonic];
+            const noteDuration = 0.3;
+            const noteGap = 0.05;
+            
+            notes.forEach((frequency, index) => {
+                const startTime = audioContext.currentTime + index * (noteDuration + noteGap);
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + noteDuration);
+            });
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateCountdown() {
+            remainingSeconds--;
+            
+            if (remainingSeconds <= 0) {
+                remainingSeconds = intervalMinutes * 60;
+                playSound();
+                status.textContent = `Sound played! Next in ${intervalMinutes} minute${intervalMinutes !== 1 ? 's' : ''}`;
+            }
+            
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            
+            const progress = remainingSeconds / (intervalMinutes * 60);
+            const offset = circumference * (1 - progress);
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        startBtn.addEventListener('click', () => {
+            const minutes = parseFloat(minutesInput.value);
+            
+            if (!minutes || minutes <= 0) {
+                alert('Please enter a valid number of minutes');
+                return;
+            }
+
+            initAudioContext();
+            
+            intervalMinutes = minutes;
+            remainingSeconds = Math.round(minutes * 60);
+            
+            timerDisplay.style.display = 'block';
+            countdownRing.style.display = 'block';
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            
+            playSound();
+            
+            intervalId = setInterval(() => {
+                playSound();
+            }, minutes * 60 * 1000);
+            
+            countdownId = setInterval(updateCountdown, 1000);
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            minutesInput.disabled = true;
+            status.classList.add('active');
+            status.textContent = `Timer active - playing sound every ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            if (countdownId) {
+                clearInterval(countdownId);
+                countdownId = null;
+            }
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            minutesInput.disabled = false;
+            status.classList.remove('active');
+            status.textContent = 'Timer stopped';
+            timerDisplay.style.display = 'none';
+            countdownRing.style.display = 'none';
+            progressCircle.style.strokeDashoffset = 0;
+        });
+    </script>
+</body>
+</html>
