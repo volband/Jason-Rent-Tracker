@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sleep Log</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      height: fit-content;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    .header h2 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+    }
+
+    input[type="date"],
+    input[type="time"],
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, textarea:focus { border-color: #888; }
+
+    textarea { resize: vertical; }
+
+    .severity-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .sev-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sev-btn:hover { background: #f5f5f5; }
+
+    .sev-btn.active[data-val="0"] { background: #EAF3DE; border-color: #3B6D11; color: #3B6D11; border-width: 2px; }
+    .sev-btn.active[data-val="1"] { background: #FAEEDA; border-color: #854F0B; color: #854F0B; border-width: 2px; }
+    .sev-btn.active[data-val="2"] { background: #FAEEDA; border-color: #BA7517; color: #BA7517; border-width: 2px; }
+    .sev-btn.active[data-val="3"] { background: #FAECE7; border-color: #993C1D; color: #993C1D; border-width: 2px; }
+    .sev-btn.active[data-val="4"] { background: #FCEBEB; border-color: #A32D2D; color: #A32D2D; border-width: 2px; }
+    .sev-btn.active[data-val="5"] { background: #FCEBEB; border-color: #501313; color: #501313; border-width: 2px; }
+
+    .sev-label {
+      font-size: 12px;
+      color: #888;
+      margin-left: 4px;
+    }
+
+    .toggle-row { display: flex; gap: 8px; }
+
+    .tog-btn {
+      padding: 6px 18px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tog-btn.active {
+      background: #E6F1FB;
+      border-color: #185FA5;
+      color: #0C447C;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 4px;
+    }
+
+    .submit-btn:hover { background: #f5f5f5; }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .status {
+      font-size: 13px;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 20px;
+      color: #888;
+    }
+
+    .status.ok  { color: #3B6D11; }
+    .status.err { color: #A32D2D; }
+  </style>
+</head>
+<body>
+
+<div class="form-card">
+  <div class="header">
+    <h2>🌙 Sleep Log Entry</h2>
+  </div>
+
+  <div class="form-grid">
+
+    <div class="form-group">
+      <label for="log-date">Date</label>
+      <input type="date" id="log-date" />
+    </div>
+
+    <div class="form-group">
+      <!-- spacer -->
+    </div>
+
+    <div class="form-group">
+      <label for="bed-time">Bed time</label>
+      <input type="time" id="bed-time" />
+    </div>
+
+    <div class="form-group">
+      <label for="wake-time">Wake up time</label>
+      <input type="time" id="wake-time" />
+    </div>
+
+    <div class="form-group full">
+      <label>Severity level</label>
+      <div class="severity-row">
+        <button class="sev-btn active" data-val="0" onclick="setSev(0)">0</button>
+        <button class="sev-btn"        data-val="1" onclick="setSev(1)">1</button>
+        <button class="sev-btn"        data-val="2" onclick="setSev(2)">2</button>
+        <button class="sev-btn"        data-val="3" onclick="setSev(3)">3</button>
+        <button class="sev-btn"        data-val="4" onclick="setSev(4)">4</button>
+        <button class="sev-btn"        data-val="5" onclick="setSev(5)">5</button>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="description">Description</label>
+      <textarea id="description" rows="3" placeholder="Describe any RBD Activity"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Dream recall</label>
+      <div class="toggle-row">
+        <button class="tog-btn"        id="recall-yes" onclick="setRecall(true)">Yes</button>
+        <button class="tog-btn active" id="recall-no"  onclick="setRecall(false)">No</button>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="injuries">Injuries</label>
+      <textarea id="injuries" rows="2" placeholder="Note any injuries"></textarea>
+    </div>
+
+    <div class="form-group full">
+      <button class="submit-btn" onclick="submitForm()">Submit Entry</button>
+      <div class="status" id="status"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCrTtIZxWszkYT1pGIbiMSnM3omfMudrjI0QAa9QpqZQ9UMQLa3RL2Ki0V9kWfGJTb/exec";
+
+  const sevLabels = ["None", "Very mild", "Mild", "Moderate", "Severe", "Very severe"];
+  let severity = 0;
+  let dreamRecall = false;
+
+  function setSev(val) {
+    severity = val;
+    document.querySelectorAll(".sev-btn").forEach(b => b.classList.remove("active"));
+    document.querySelector(`.sev-btn[data-val="${val}"]`).classList.add("active");
+    document.getElementById("sev-desc").textContent = sevLabels[val];
+  }
+
+  function setRecall(val) {
+    dreamRecall = val;
+    document.getElementById("recall-yes").classList.toggle("active",  val);
+    document.getElementById("recall-no").classList.toggle("active", !val);
+  }
+
+  function setStatus(msg, type) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status " + (type || "");
+  }
+
+  async function submitForm() {
+    const date        = document.getElementById("log-date").value;
+    const bedTime     = document.getElementById("bed-time").value;
+    const wakeTime    = document.getElementById("wake-time").value;
+    const description = document.getElementById("description").value.trim();
+    const injuries    = document.getElementById("injuries").value.trim();
+
+    if (!date)     { setStatus("Please select a date.", "err"); return; }
+    if (!bedTime)  { setStatus("Please enter a bed time.", "err"); return; }
+    if (!wakeTime) { setStatus("Please enter a wake up time.", "err"); return; }
+
+    const payload = {
+      date, bedTime, wakeTime,
+      severity,
+      description,
+      dreamRecall: dreamRecall ? "Yes" : "No",
+      injuries
+    };
+
+    setStatus("Submitting...");
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      setStatus("Entry saved successfully!", "ok");
+      document.getElementById("log-date").value = "";
+      document.getElementById("bed-time").value = "";
+      document.getElementById("wake-time").value = "";
+      document.getElementById("description").value = "";
+      document.getElementById("injuries").value = "";
+      setSev(0);
+      setRecall(false);
+    } catch (err) {
+      setStatus("Submission failed. Check your script URL.", "err");
+    }
+  }
+
+  // Default date to today
+  document.getElementById("log-date").value = new Date().toISOString().split("T")[0];
+</script>
+
+</body>
+</html>
