@@ -257,8 +257,8 @@
 
   async function submitForm() {
     var date        = document.getElementById("log-date").value;
-    const bedTime     = document.getElementById("bed-time").value;
-    const wakeTime    = document.getElementById("wake-time").value;
+    var bedTime     = document.getElementById("bed-time").value;
+    var wakeTime    = document.getElementById("wake-time").value;
     const description = document.getElementById("description").value.trim();
     const injuries    = document.getElementById("injuries").value.trim();
 
@@ -267,6 +267,8 @@
     if (!wakeTime) { setStatus("Please enter a wake up time.", "err"); return; }
 
     date = formatDate(date);
+    bedTime = "'" + bedTime;
+    wakeTime = "'" + wakeTime;
     
     const payload = {
       date, bedTime, wakeTime,
