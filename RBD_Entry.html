@@ -235,13 +235,14 @@
     severity = val;
     document.querySelectorAll(".sev-btn").forEach(b => b.classList.remove("active"));
     document.querySelector(`.sev-btn[data-val="${val}"]`).classList.add("active");
-    document.getElementById("sev-desc").textContent = val;
   }
-function formatDate(val) {
+  
+  function formatDate(val) {
     if (!val) return "";
     const [y, m, d] = val.split("-");
     return `${m}/${d}/${y}`;
   }
+  
   function setRecall(val) {
     dreamRecall = val;
     document.getElementById("recall-yes").classList.toggle("active",  val);
@@ -260,7 +261,6 @@ function formatDate(val) {
     const wakeTime    = document.getElementById("wake-time").value;
     const description = document.getElementById("description").value.trim();
     const injuries    = document.getElementById("injuries").value.trim();
-    const severity    = document.getElementById("sev-desc").textContent;
 
     if (!date)     { setStatus("Please select a date.", "err"); return; }
     if (!bedTime)  { setStatus("Please enter a bed time.", "err"); return; }
@@ -272,7 +272,7 @@ function formatDate(val) {
       date, bedTime, wakeTime,
       severity,
       description,
-      dreamRecall: dreamRecall ? "Yes" : "No",
+      dreamRecall: dreamRecall ? "Yes" : "",
       injuries
     };
 
