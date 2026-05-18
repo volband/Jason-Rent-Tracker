@@ -290,9 +290,9 @@
         body: JSON.stringify(payload)
       });
       setStatus("Entry saved successfully!", "ok");
-      document.getElementById("log-date").value = "";
-      document.getElementById("bed-time").value = "";
-      document.getElementById("wake-time").value = "";
+      document.getElementById("log-date").value = new Date().toISOString().split("T")[0];
+      document.getElementById("bed-time").value = "22:00";
+      document.getElementById("wake-time").value = "06:00";
       document.getElementById("description").value = "";
       document.getElementById("injuries").value = "";
       setSev(0);
@@ -304,6 +304,8 @@
 
   // Default date to today
   document.getElementById("log-date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("bed-time").value = "22:00";
+  document.getElementById("wake-time").value = "06:00";
 </script>
 
 </body>
